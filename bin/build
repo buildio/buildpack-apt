@@ -176,9 +176,9 @@ fi
 # write layer toml file
 cat << EOF > "${apt_layer}.toml"
 [types]
-  launch = true
-  build = true
-  cache = true
+launch = true
+build = true
+cache = true
 EOF
 
 end_time=$(date +%s%N)
