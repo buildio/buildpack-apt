@@ -162,6 +162,12 @@ EOF
   echo -n "$pkg_config_path" > "$apt_env_dir/PKG_CONFIG_PATH.prepend"
   echo -n ":" > "$apt_env_dir/PKG_CONFIG_PATH.delim"
 
+  gi_typelib_path=$apt_layer/usr/lib/x86_64-linux-gnu/girepository-1.0:$apt_layer/usr/lib/i386-linux-gnu/girepository-1.0
+  echo "GI_TYPELIB_PATH=$gi_typelib_path" | indent
+  echo "GI_TYPELIB_PATH = \"$gi_typelib_path:\$GI_TYPELIB_PATH\"" >> "$exports_path"
+  echo -n "$gi_typelib_path" > "$apt_env_dir/GI_TYPELIB_PATH.prepend"
+  echo -n ":" > "$apt_env_dir/GI_TYPELIB_PATH.delim"
+
   echo 'EOF' >> "$exports_path"
   echo '' >> "$exports_path"
 fi
