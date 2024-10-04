@@ -57,10 +57,8 @@ case "$APT_VERSION" in
   *)         APT_FORCE_YES="--allow-downgrades --allow-remove-essential --allow-change-held-packages";;
 esac
 
-#if [ -f "$apt_layer/Aptfile" ] && cmp -s Aptfile "$apt_layer/Aptfile" && [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
-#  topic "Aptfile and stack look the same, reusing cache"
-if [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
-  topic "Stack looks the same, reusing cache"
+if [ -f "$apt_layer/Aptfile" ] && cmp -s Aptfile "$apt_layer/Aptfile" && [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
+  topic "Aptfile and stack look the same, reusing cache"
 else
   # Aptfile changed or does not exist or STACK changed
   topic "Detected Aptfile changes, flushing cache"
