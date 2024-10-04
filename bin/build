@@ -182,6 +182,9 @@ cat << EOF > "${apt_layer}.toml"
 launch = true
 build = true
 cache = true
+
+[metadata]
+version = "0.09"
 EOF
 
 end_time=$(date +%s%N)
