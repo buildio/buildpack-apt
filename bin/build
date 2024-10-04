@@ -58,7 +58,7 @@ case "$APT_VERSION" in
   *)         APT_FORCE_YES="--allow-downgrades --allow-remove-essential --allow-change-held-packages";;
 esac
 
-sleep 360
+sleep 60
 
 if [ -f "$apt_layer/Aptfile" ] && cmp -s Aptfile "$apt_layer/Aptfile" && [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
   topic "Aptfile and stack look the same, reusing cache"
