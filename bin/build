@@ -55,8 +55,6 @@ case "$APT_VERSION" in
   *)         APT_FORCE_YES="--allow-downgrades --allow-remove-essential --allow-change-held-packages";;
 esac
 
-sleep 60
-
 #if [ -f "$apt_layer/Aptfile" ] && cmp -s Aptfile "$apt_layer/Aptfile" && [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
 #  topic "Aptfile and stack look the same, reusing cache"
 if [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
@@ -186,6 +184,10 @@ cache = true
 stack = "${CNB_STACK_ID}"
 EOF
 
+echo "--- ${apt_layer}.toml ---"
+cat "${apt_layer}.toml"
+
+sleep 10
 
 end_time=$(date +%s%N)
 echo "Elapsed time: $(( $(( end_time - start_time )) / 1000000 ))ms" | indent
