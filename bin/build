@@ -176,16 +176,28 @@ EOF
   echo '' >> "$exports_path"
 fi
 
-# write layer toml file
+buildpack_toml="${layers_dir}/buildpack.toml"
+
+# Initialize the layer TOML file
 cat << EOF > "${apt_layer}.toml"
 [types]
 launch = true
 build = true
 cache = true
-
-[metadata]
-version = "0.09"
 EOF
+
+# Check for our buildpack_toml file and extract our version
+if [[ -f "${buildpack_toml}" ]]; then
+  buildpack_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "${buildpack_toml}")
+  
+  # Append metadata version if version is found
+  if [[ -n "${buildpack_version}" ]]; then
+    echo -e "\n[metadata]" >> "${apt_layer}.toml"
+    echo "version = \"${buildpack_version}\"" >> "${apt_layer}.toml"
+  else
+    echo "# apt-buildpack TOML parsing failed" >> "${apt_layer}.toml"
+  fi
+fi
 
 end_time=$(date +%s%N)
 echo "Elapsed time: $(( $(( end_time - start_time )) / 1000000 ))ms" | indent
