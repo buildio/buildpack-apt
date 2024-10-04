@@ -41,7 +41,7 @@ mkdir -p "$apt_layer"
 if [ -f "${apt_layer}.toml" ]; then
   CACHED_STACK=$(sed -n 's/.*stack\s*=\s*"\([^"]*\)".*/\1/p' ${apt_layer}.toml)
 else
-  CACHED_STACK=$CNB_STACK_ID
+  CACHED_STACK=""
 fi
 
 APT_CACHE_DIR="$apt_layer/cache"
@@ -183,7 +183,7 @@ build = true
 cache = true
 
 [metadata]
-stack = "$(CNB_STACK_ID)"
+stack = "${CNB_STACK_ID}"
 EOF
 
 
