@@ -38,14 +38,11 @@ apt_layer=$layers_dir/apt
 mkdir -p "$apt_layer"
 
 # Store which STACK we are running on in the cache to bust the cache if it changes
-if [ -f "$apt_layer/STACK" ]; then
-  CACHED_STACK=$(cat "$apt_layer/STACK")
+if [ -f "${apt_layer}.toml" ]; then
+  CACHED_STACK=$(sed -n 's/.*stack\s*=\s*"\([^"]*\)".*/\1/p' ${apt_layer}.toml)
 else
   CACHED_STACK=$CNB_STACK_ID
 fi
-
-# Ensure we store the STACK in the cache for next time.
-echo "$CNB_STACK_ID" > "$apt_layer/STACK"
 
 APT_CACHE_DIR="$apt_layer/cache"
 APT_STATE_DIR="$apt_layer/state"
@@ -60,8 +57,10 @@ esac
 
 sleep 60
 
-if [ -f "$apt_layer/Aptfile" ] && cmp -s Aptfile "$apt_layer/Aptfile" && [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
-  topic "Aptfile and stack look the same, reusing cache"
+#if [ -f "$apt_layer/Aptfile" ] && cmp -s Aptfile "$apt_layer/Aptfile" && [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
+#  topic "Aptfile and stack look the same, reusing cache"
+if [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
+  topic "Stack looks the same, reusing cache"
 else
   # Aptfile changed or does not exist or STACK changed
   topic "Detected Aptfile changes, flushing cache"
@@ -176,28 +175,17 @@ EOF
   echo '' >> "$exports_path"
 fi
 
-buildpack_toml="${layers_dir}/buildpack.toml"
-
-# Initialize the layer TOML file
+# Write the cache-aware layer TOML file
 cat << EOF > "${apt_layer}.toml"
 [types]
 launch = true
 build = true
 cache = true
+
+[metadata]
+stack = "$(CNB_STACK_ID)"
 EOF
 
-# Check for our buildpack_toml file and extract our version
-if [[ -f "${buildpack_toml}" ]]; then
-  buildpack_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "${buildpack_toml}")
-  
-  # Append metadata version if version is found
-  if [[ -n "${buildpack_version}" ]]; then
-    echo -e "\n[metadata]" >> "${apt_layer}.toml"
-    echo "version = \"${buildpack_version}\"" >> "${apt_layer}.toml"
-  else
-    echo "# apt-buildpack TOML parsing failed" >> "${apt_layer}.toml"
-  fi
-fi
 
 end_time=$(date +%s%N)
 echo "Elapsed time: $(( $(( end_time - start_time )) / 1000000 ))ms" | indent
