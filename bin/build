@@ -40,8 +40,10 @@ mkdir -p "$apt_layer"
 # Store which STACK we are running on in the cache to bust the cache if it changes
 if [ -f "${apt_layer}.toml" ]; then
   CACHED_STACK=$(sed -n 's/.*stack\s*=\s*"\([^"]*\)".*/\1/p' ${apt_layer}.toml)
+  echo "Found cached ${apt_layer}.toml: ${CACHED_STACK}"
 else
   CACHED_STACK=""
+  echo "No cached ${apt_layer}.toml found"
 fi
 
 APT_CACHE_DIR="$apt_layer/cache"
