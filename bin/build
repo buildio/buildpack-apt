@@ -200,4 +200,4 @@ EOF
 # sleep 10
 
 end_time=$(date +%s%N)
-topic "Elapsed time: $(( $(( end_time - start_time )) / 1000000 ))ms"
+indent "Elapsed time: $(( $(( end_time - start_time )) / 1000000 ))ms"
