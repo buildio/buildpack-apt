@@ -19,11 +19,19 @@ function topic() {
 
 function indent() {
   c='s/^/       /'
-  case $(uname) in
-    Darwin) sed -l "$c";;
-    *)      sed -u "$c";;
-  esac
+  
+  if [ -t 0 ]; then
+    # If there is an argument (no pipe)
+    echo "$1" | sed "$c"
+  else
+    # If input is being piped
+    case $(uname) in
+      Darwin) sed -l "$c";;
+      *)      sed -u "$c";;
+    esac
+  fi
 }
+
 
 layers_dir="$CNB_LAYERS_DIR"
 env_dir="$CNB_PLATFORM_DIR/env"
@@ -34,16 +42,18 @@ if compgen -G "${env_dir}/*" > /dev/null; then
   done
 fi
 
+topic "Installing Aptfile packages."
+
 apt_layer=$layers_dir/apt
 mkdir -p "$apt_layer"
 
 # Store which STACK we are running on in the cache to bust the cache if it changes
 if [ -f "${apt_layer}.toml" ]; then
   CACHED_STACK=$(sed -n 's/.*stack\s*=\s*"\([^"]*\)".*/\1/p' ${apt_layer}.toml)
-  echo "Found cached ${apt_layer}.toml: ${CACHED_STACK}"
+  indent "Found cached ${apt_layer}.toml: ${CACHED_STACK}"
 else
   CACHED_STACK=""
-  echo "No cached ${apt_layer}.toml found"
+  indent "No cached ${apt_layer}.toml found"
 fi
 
 APT_CACHE_DIR="$apt_layer/cache"
@@ -58,10 +68,10 @@ case "$APT_VERSION" in
 esac
 
 if [ -f "$apt_layer/Aptfile" ] && cmp -s Aptfile "$apt_layer/Aptfile" && [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
-  topic "Aptfile and stack look the same, reusing cache"
+  indent "Aptfile and stack look the same, reusing cache"
 else
   # Aptfile changed or does not exist or STACK changed
-  topic "Detected Aptfile changes, flushing cache"
+  indent "Detected Aptfile or stack change, flushing cache"
   rm -rf "$APT_CACHE_DIR"
   mkdir -p "$APT_CACHE_DIR/archives/partial"
   mkdir -p "$APT_STATE_DIR/lists/partial"
@@ -71,7 +81,7 @@ else
   # add custom repositories from Aptfile to sources.list
   # like>>    :repo:deb http://cz.archive.ubuntu.com/ubuntu artful main universe
   if grep -q -e "^:repo:" Aptfile; then
-    topic "Adding custom repositories"
+    indent "Adding custom repositories"
     cat Aptfile | grep -s -e "^:repo:" | sed 's/^:repo:\(.*\)\s*$/\1/g' >> "$APT_SOURCES"
   fi
 
@@ -79,7 +89,7 @@ else
   APT_OPTIONS="$APT_OPTIONS -o dir::etc::sourcelist=$APT_SOURCES -o dir::etc::sourceparts=/dev/null"
   APT_OPTIONS="$APT_OPTIONS -o Acquire::Retries=3" # Try thrice to reach the repositories
 
-  topic "Updating apt caches"
+  indent "Updating apt caches"
   # Ignore stderr from apt-get update containing: rm: cannot remove '/var/cache/apt/archives/partial/*.deb': Permission denied
   apt-get $APT_OPTIONS update 2> >(grep -v "rm: cannot remove") | indent
 
@@ -88,22 +98,22 @@ else
       PACKAGE_NAME=$(basename "$PACKAGE" .deb)
       PACKAGE_FILE=$APT_CACHE_DIR/archives/$PACKAGE_NAME.deb
 
-      topic "Fetching $PACKAGE"
+      indent "Fetching $PACKAGE"
       curl --silent --show-error --fail -L -z "$PACKAGE_FILE" -o "$PACKAGE_FILE" "$PACKAGE" 2>&1 | indent
     else
-      topic "Fetching .debs for $PACKAGE"
+      indent "Fetching .debs for $PACKAGE"
       apt-get $APT_OPTIONS -y $APT_FORCE_YES -d install --reinstall "$PACKAGE" | indent
     fi
   done
 
-  topic "Installing apt packages with dpkg"
+  indent "Installing apt packages with dpkg"
   for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
-    topic "Installing $(basename $DEB)"
+    indent "Installing $(basename $DEB)"
     basename "$DEB" | indent
     dpkg -x "$DEB" "$apt_layer/"
   done
 
-  topic "Writing exec.d script and environment variables"
+  indent "Writing exec.d script and environment variables"
 
   exports_path=$apt_layer/exec.d/000_apt.sh
   mkdir -p "$apt_layer/exec.d"
@@ -184,10 +194,10 @@ cache = true
 stack = "${CNB_STACK_ID}"
 EOF
 
-echo "--- ${apt_layer}.toml ---"
-cat "${apt_layer}.toml"
+# echo "--- ${apt_layer}.toml ---"
+# cat "${apt_layer}.toml"
 
-sleep 10
+# sleep 10
 
 end_time=$(date +%s%N)
-echo "Elapsed time: $(( $(( end_time - start_time )) / 1000000 ))ms" | indent
+topic "Elapsed time: $(( $(( end_time - start_time )) / 1000000 ))ms" | indent
