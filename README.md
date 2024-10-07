@@ -1,6 +1,4 @@
-# apt Buildpack
-
-[![Version](https://img.shields.io/badge/dynamic/json?url=https://cnb-registry-api.herokuapp.com/api/v1/buildpacks/fagiani/apt&label=Version&query=$.latest.version)](https://github.com/dmikusa/apt-buildpack)
+# Aptfile (apt) Buildpack
 
 This is a [Cloud Native Buildpack](https://buildpacks.io/) that adds support for `apt`-based dependencies during both build and runtime.
 
@@ -16,7 +14,7 @@ Include a list of `apt` package names to be installed in a file named `Aptfile`;
 The buildpack automatically downloads and installs the packages when you run a build:
 
 ```
-$ pack build --buildpack dmikusa/apt myapp
+$ pack build --buildpack buildio/buildpack-apt myapp
 ```
 
 #### Aptfile
