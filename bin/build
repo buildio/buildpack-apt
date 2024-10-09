@@ -68,10 +68,10 @@ case "$APT_VERSION" in
 esac
 
 if [ -f "$apt_layer/Aptfile" ] && cmp -s Aptfile "$apt_layer/Aptfile" && [[ $CACHED_STACK == "$CNB_STACK_ID" ]] ; then
-  indent "Aptfile and stack look the same, reusing cache"
+  topic "Aptfile and stack look the same, reusing cache"
 else
   # Aptfile changed or does not exist or STACK changed
-  indent "Detected Aptfile or stack change, flushing cache"
+  topic "Detected Aptfile or stack change, flushing cache"
   rm -rf "$APT_CACHE_DIR"
   mkdir -p "$APT_CACHE_DIR/archives/partial"
   mkdir -p "$APT_STATE_DIR/lists/partial"
