@@ -131,7 +131,7 @@ EOF
   apt_env_dir=$apt_layer/env
   mkdir -p "$apt_env_dir"
 
-  path="$apt_layer/usr/bin"
+  path="$apt_layer/usr/bin:$apt_layer/usr/sbin"
   echo "PATH=$path" | indent
   echo "PATH = \"$path:\$PATH\"" >> "$exports_path"
   echo -n "$path:$PATH" > "$apt_env_dir/PATH.prepend"
