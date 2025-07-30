@@ -28,6 +28,11 @@ function error() {
   exit 1
 }
 
+# Ensure we're not running as root which could cause permission issues
+if [ "$(id -u)" = "0" ]; then
+  error "This buildpack cannot run as root user"
+fi
+
 function topic() {
   echo "-----> $*"
 }
@@ -254,7 +259,7 @@ cache = true
 [metadata]
 stack = "${CNB_STACK_ID}"
 buildpack_id = "${BUILDPACK_ID:-io.build.github.buildio.buildpack-apt}"
-buildpack_version = "${BUILDPACK_VERSION:-0.0.19}"
+buildpack_version = "${BUILDPACK_VERSION:-0.0.20}"
 EOF
 
 # echo "--- ${apt_layer}.toml ---"

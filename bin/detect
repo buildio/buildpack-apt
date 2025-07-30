@@ -1,8 +1,25 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
 
+# Ensure we're running with proper permissions
+set -eo pipefail
+
+# Debug: Check current user and permissions
+if [ -n "$CNB_BUILDPACK_DIR" ]; then
+  current_user=$(id -u):$(id -g)
+  buildpack_perms=$(ls -ld "$CNB_BUILDPACK_DIR" 2>&1 || echo "Cannot stat buildpack dir")
+  # Only output debug info if DEBUG env var is set
+  if [ -n "$DEBUG" ]; then
+    >&2 echo "DEBUG: Current user: $current_user"
+    >&2 echo "DEBUG: Buildpack dir: $buildpack_perms"
+    >&2 echo "DEBUG: /cnb permissions: $(ls -ld /cnb 2>&1 || echo 'Cannot stat /cnb')"
+  fi
+fi
+
 if [[ -f Aptfile ]]; then
-  echo "Apt" && exit 0
+  echo "Apt"
+  exit 0
 else
-  echo "no" && exit 1
+  echo "no"
+  exit 1
 fi
