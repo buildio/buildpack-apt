@@ -254,7 +254,7 @@ cache = true
 [metadata]
 stack = "${CNB_STACK_ID}"
 buildpack_id = "${BUILDPACK_ID:-io.build.github.buildio.buildpack-apt}"
-buildpack_version = "${BUILDPACK_VERSION:-0.0.18}"
+buildpack_version = "${BUILDPACK_VERSION:-0.0.19}"
 EOF
 
 # echo "--- ${apt_layer}.toml ---"

@@ -1,8 +1,8 @@
-api = "0.13"
+api = "0.11"
 
 [buildpack]
 id = "io.build.github.buildio.buildpack-apt"
-version = "0.0.18"
+version = "0.0.19"
 name = "apt Packages Buildpack"
 homepage = "https://github.com/buildio/buildpack-apt"
 description = "Installs apt packages for further builds and runtime"
