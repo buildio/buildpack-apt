@@ -47,6 +47,9 @@ topic "Installing Aptfile packages."
 apt_layer=$layers_dir/apt
 mkdir -p "$apt_layer"
 
+# Define exports_path here so it's available in all code paths
+exports_path=$apt_layer/exec.d/000_apt.sh
+
 # Store which STACK we are running on in the cache to bust the cache if it changes
 if [ -f "${apt_layer}.toml" ]; then
   CACHED_STACK=$(sed -n 's/.*stack\s*=\s*"\([^"]*\)".*/\1/p' ${apt_layer}.toml)
@@ -110,12 +113,40 @@ else
   for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
     indent "Installing $(basename $DEB)"
     basename "$DEB" | indent
-    dpkg -x "$DEB" "$apt_layer/"
+    # Extract to temp dir first to avoid permission issues
+    TEMP_EXTRACT_DIR=$(mktemp -d)
+    dpkg -x "$DEB" "$TEMP_EXTRACT_DIR"
+    
+    # Copy only the contents we need, avoiding system directories
+    # This prevents packages from modifying /cnb or other system paths
+    if [ -d "$TEMP_EXTRACT_DIR/usr" ]; then
+      cp -rp "$TEMP_EXTRACT_DIR/usr" "$apt_layer/"
+    fi
+    if [ -d "$TEMP_EXTRACT_DIR/lib" ]; then
+      cp -rp "$TEMP_EXTRACT_DIR/lib" "$apt_layer/"
+    fi
+    if [ -d "$TEMP_EXTRACT_DIR/lib64" ]; then
+      cp -rp "$TEMP_EXTRACT_DIR/lib64" "$apt_layer/"
+    fi
+    if [ -d "$TEMP_EXTRACT_DIR/opt" ]; then
+      cp -rp "$TEMP_EXTRACT_DIR/opt" "$apt_layer/"
+    fi
+    if [ -d "$TEMP_EXTRACT_DIR/etc" ]; then
+      cp -rp "$TEMP_EXTRACT_DIR/etc" "$apt_layer/"
+    fi
+    if [ -d "$TEMP_EXTRACT_DIR/sbin" ]; then
+      cp -rp "$TEMP_EXTRACT_DIR/sbin" "$apt_layer/"
+    fi
+    if [ -d "$TEMP_EXTRACT_DIR/bin" ]; then
+      cp -rp "$TEMP_EXTRACT_DIR/bin" "$apt_layer/"
+    fi
+    
+    # Clean up temp directory
+    rm -rf "$TEMP_EXTRACT_DIR"
   done
 
   indent "Writing exec.d script and environment variables"
 
-  exports_path=$apt_layer/exec.d/000_apt.sh
   mkdir -p "$apt_layer/exec.d"
   touch "$exports_path"
   chmod 755 "$exports_path"
@@ -131,7 +162,7 @@ EOF
   apt_env_dir=$apt_layer/env
   mkdir -p "$apt_env_dir"
 
-  path="$apt_layer/usr/bin:$apt_layer/usr/sbin"
+  path="$apt_layer/usr/bin:$apt_layer/usr/sbin:$apt_layer/bin:$apt_layer/sbin"
   echo "PATH=$path" | indent
   echo "PATH = \"$path:\$PATH\"" >> "$exports_path"
   echo -n "$path:$PATH" > "$apt_env_dir/PATH.prepend"

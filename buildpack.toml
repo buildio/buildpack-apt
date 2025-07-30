@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "io.build.github.buildio.buildpack-apt"
-version = "0.0.15"
+version = "0.0.16"
 name = "apt Packages Buildpack"
 homepage = "https://github.com/buildio/buildpack-apt"
 description = "Installs apt packages for further builds and runtime"
