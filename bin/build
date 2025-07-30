@@ -3,10 +3,22 @@
 # fail fast
 set -eo pipefail
 
+# Save current umask and ensure we don't change global permissions
+ORIGINAL_UMASK=$(umask)
+umask 0022
+
 start_time=$(date +%s%N)
 
 # debug
 # set -x
+
+# Cleanup function to restore umask
+function cleanup() {
+  umask "$ORIGINAL_UMASK"
+}
+
+# Ensure cleanup runs on exit
+trap cleanup EXIT
 
 function error() {
   echo " !     $*" >&2
@@ -46,6 +58,8 @@ topic "Installing Aptfile packages."
 
 apt_layer=$layers_dir/apt
 mkdir -p "$apt_layer"
+# Ensure apt_layer has proper permissions
+chmod 755 "$apt_layer"
 
 # Define exports_path here so it's available in all code paths
 exports_path=$apt_layer/exec.d/000_apt.sh
@@ -119,26 +133,34 @@ else
     
     # Copy only the contents we need, avoiding system directories
     # This prevents packages from modifying /cnb or other system paths
+    # Use --no-dereference to avoid following symlinks that might point outside
     if [ -d "$TEMP_EXTRACT_DIR/usr" ]; then
-      cp -rp "$TEMP_EXTRACT_DIR/usr" "$apt_layer/"
+      mkdir -p "$apt_layer/usr"
+      cp -rp --no-dereference "$TEMP_EXTRACT_DIR/usr"/* "$apt_layer/usr/" 2>/dev/null || true
     fi
     if [ -d "$TEMP_EXTRACT_DIR/lib" ]; then
-      cp -rp "$TEMP_EXTRACT_DIR/lib" "$apt_layer/"
+      mkdir -p "$apt_layer/lib"
+      cp -rp --no-dereference "$TEMP_EXTRACT_DIR/lib"/* "$apt_layer/lib/" 2>/dev/null || true
     fi
     if [ -d "$TEMP_EXTRACT_DIR/lib64" ]; then
-      cp -rp "$TEMP_EXTRACT_DIR/lib64" "$apt_layer/"
+      mkdir -p "$apt_layer/lib64"
+      cp -rp --no-dereference "$TEMP_EXTRACT_DIR/lib64"/* "$apt_layer/lib64/" 2>/dev/null || true
     fi
     if [ -d "$TEMP_EXTRACT_DIR/opt" ]; then
-      cp -rp "$TEMP_EXTRACT_DIR/opt" "$apt_layer/"
+      mkdir -p "$apt_layer/opt"
+      cp -rp --no-dereference "$TEMP_EXTRACT_DIR/opt"/* "$apt_layer/opt/" 2>/dev/null || true
     fi
     if [ -d "$TEMP_EXTRACT_DIR/etc" ]; then
-      cp -rp "$TEMP_EXTRACT_DIR/etc" "$apt_layer/"
+      mkdir -p "$apt_layer/etc"
+      cp -rp --no-dereference "$TEMP_EXTRACT_DIR/etc"/* "$apt_layer/etc/" 2>/dev/null || true
     fi
     if [ -d "$TEMP_EXTRACT_DIR/sbin" ]; then
-      cp -rp "$TEMP_EXTRACT_DIR/sbin" "$apt_layer/"
+      mkdir -p "$apt_layer/sbin"
+      cp -rp --no-dereference "$TEMP_EXTRACT_DIR/sbin"/* "$apt_layer/sbin/" 2>/dev/null || true
     fi
     if [ -d "$TEMP_EXTRACT_DIR/bin" ]; then
-      cp -rp "$TEMP_EXTRACT_DIR/bin" "$apt_layer/"
+      mkdir -p "$apt_layer/bin"
+      cp -rp --no-dereference "$TEMP_EXTRACT_DIR/bin"/* "$apt_layer/bin/" 2>/dev/null || true
     fi
     
     # Clean up temp directory
