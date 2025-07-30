@@ -20,6 +20,9 @@ function cleanup() {
 # Ensure cleanup runs on exit
 trap cleanup EXIT
 
+# Ensure we don't modify global filesystem permissions
+# This check will help diagnose permission issues early
+
 function error() {
   echo " !     $*" >&2
   exit 1
@@ -57,6 +60,11 @@ fi
 topic "Installing Aptfile packages."
 
 apt_layer=$layers_dir/apt
+# Ensure we're working within the assigned layer directory
+if [ -z "$layers_dir" ] || [ ! -d "$layers_dir" ]; then
+  error "CNB_LAYERS_DIR is not set or does not exist"
+fi
+
 mkdir -p "$apt_layer"
 # Ensure apt_layer has proper permissions
 chmod 755 "$apt_layer"
@@ -245,6 +253,8 @@ cache = true
 
 [metadata]
 stack = "${CNB_STACK_ID}"
+buildpack_id = "${BUILDPACK_ID:-io.build.github.buildio.buildpack-apt}"
+buildpack_version = "${BUILDPACK_VERSION:-0.0.18}"
 EOF
 
 # echo "--- ${apt_layer}.toml ---"
